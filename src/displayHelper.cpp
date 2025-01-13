@@ -10,6 +10,10 @@ hw_timer_t *timer3 = NULL;
 
 void displaySetup()
 {
+  // Initialize the I2C interface
+  Wire.setPins(SDA_PIN, SCL_PIN);
+  Wire.begin();
+
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
   {
@@ -18,14 +22,14 @@ void displaySetup()
       ; // Don't proceed, loop forever
   }
   display.clearDisplay();
-  display.display();
+  displayPrint(SPLASHMESSAGE);
 
   // Set up timer for displayShowFor()
   timer3 = timerBegin(TIMER_NUMBER, TIMER_PRESCALER, true); // Timer 0, Ticking at 100kHz or 0.001ms
   timerAttachInterrupt(timer3, &displayClear, true);        // Attach the interrupt
 
   // Credits for me
-  displayShowFor("MiniMacro from Dad", 5000);
+  displayShowFor(SPLASHMESSAGE, 5000);
 }
 
 void displayLoop()

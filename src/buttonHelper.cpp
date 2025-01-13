@@ -5,7 +5,14 @@
 
 // Global Variables
 const char *buttonNames[] = {"RED", "GREEN", "BLUE", "YELLOW", "BLACK", "WHITE"};
-const int buttonPins[] = {1, 2, 4, 6, 8, 10}; // GPIO pins, same order as above
+const int buttonPins[] = { // GPIO pins, same order as above
+    RED_BUTTON_PIN,
+    GREEN_BUTTON_PIN,
+    BLUE_BUTTON_PIN,
+    YELLOW_BUTTON_PIN,
+    BLACK_BUTTON_PIN,
+    WHITE_BUTTON_PIN};
+
 char **singleBuffer;
 char **doubleBuffer;
 
