@@ -3,8 +3,11 @@
 #define CONFIG_H
 
 // WiFi Options
-#define WIFI_SSID "MiniMacro_5D4C"
-#define WIFI_PASSWORD "password"
+#define WIFI_SSID "MiniMacro"
+#define WIFI_PASSWORD ""
+#define WIFI_CONNECT_TIMEOUT 10 // in seconds
+#define WIFI_CONFIG_FILENAME "/wifi.dat"
+#define TRIGGER_PIN 0
 
 // Macro Options
 #define MACRO_LENGTH 2048
