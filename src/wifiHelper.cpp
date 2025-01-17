@@ -569,7 +569,7 @@ bool loadFileFSConfigFile()
   }
   else
   {
-    Serial.println(F("failed to mount FS"));
+    Serial.println(F("Failed to mount FS"));
     return false;
   }
   return true;
@@ -737,7 +737,7 @@ int calcChecksum(uint8_t *address, uint16_t sizeToCalc)
 bool loadConfigData()
 {
   File file = FileFS.open(CONFIG_FILENAME, "r");
-  LOGERROR(F("LoadWiFiCfgFile "));
+  LOGERROR(F("Error LoadWiFiCfgFile "));
 
   memset((void *)&WM_config, 0, sizeof(WM_config));
 
@@ -857,8 +857,6 @@ void wifiSetup()
     }
   }
 
-  loadFileFSConfigFile();
-
   // The extra parameters to be configured (can be either global or just in the setup)
   // After connecting, parameter.getValue() will get you the configured value
   // id/name placeholder/prompt default length
@@ -947,14 +945,14 @@ void wifiSetup()
   bool configDataLoaded = false;
 
   // From v1.1.0, Don't permit NULL password
-  if ((Router_SSID != "") && (Router_Pass != ""))
-  {
-    LOGERROR3(F("* Add SSID = "), Router_SSID, F(", PW = "), Router_Pass);
-    wifiMulti.addAP(Router_SSID.c_str(), Router_Pass.c_str());
+  // if ((Router_SSID != "") && (Router_Pass != ""))
+  // {
+  //   LOGERROR3(F("* Add SSID = "), Router_SSID, F(", PW = "), Router_Pass);
+  //   wifiMulti.addAP(Router_SSID.c_str(), Router_Pass.c_str());
 
-    ESPAsync_wifiManager.setConfigPortalTimeout(120); // If no access point name has been previously entered disable timeout.
-    Serial.println(F("Got ESP Self-Stored Credentials. Timeout 120s for Config Portal"));
-  }
+  //   ESPAsync_wifiManager.setConfigPortalTimeout(120); // If no access point name has been previously entered disable timeout.
+  //   Serial.println(F("Got ESP Self-Stored Credentials. Timeout 120s for Config Portal"));
+  // }
 
   if (loadConfigData())
   {

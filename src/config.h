@@ -2,7 +2,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// WiFi Options
+// WiFi Access Point Options
 #define WIFI_SSID "MiniMacro"
 #define WIFI_PASSWORD ""
 #define WIFI_CONNECT_TIMEOUT 10 // in seconds

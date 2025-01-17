@@ -1,8 +1,39 @@
 #include "config.h"
 #include <Adafruit_TinyUSB.h>
 #include <LittleFS.h>
+#include <ArduinoJson.h> // JSON 7.x
 #include "storageHelper.h"
 #include "buttonHelper.h"
+#include "web/index.h"
+
+// Global Variables
+char singleRedBuffer[MACRO_LENGTH] = "Red Button";
+char singleGreenBuffer[MACRO_LENGTH] = "Green Button";
+char singleBlueBuffer[MACRO_LENGTH] = "Blue Button";
+char singleYellowBuffer[MACRO_LENGTH] = "Yellow Button";
+char singleBlackBuffer[MACRO_LENGTH] = "Black Button";
+char singleWhiteBuffer[MACRO_LENGTH] = "White Button";
+char *singleMacroBuffer[] = {
+    singleRedBuffer,
+    singleGreenBuffer,
+    singleBlueBuffer,
+    singleYellowBuffer,
+    singleBlackBuffer,
+    singleWhiteBuffer};
+
+char doubleRedBuffer[MACRO_LENGTH] = "Red Button Double";
+char doubleGreenBuffer[MACRO_LENGTH] = "Green Button Double";
+char doubleBlueBuffer[MACRO_LENGTH] = "Blue Button Double";
+char doubleYellowBuffer[MACRO_LENGTH] = "Yellow Button Double";
+char doubleBlackBuffer[MACRO_LENGTH] = "Black Button Double";
+char doubleWhiteBuffer[MACRO_LENGTH] = "White Button Double";
+char *doubleMacroBuffer[] = {
+    doubleRedBuffer,
+    doubleGreenBuffer,
+    doubleBlueBuffer,
+    doubleYellowBuffer,
+    doubleBlackBuffer,
+    doubleWhiteBuffer};
 
 bool storageSetup()
 {
@@ -30,53 +61,107 @@ bool storageSetup()
   return true;
 }
 
-bool saveMacros(const char *macros[], const char *fileName)
+bool saveMacros(char *macros[], const char *fileName)
 {
-  // Save macros to file
+  Serial.println("Saving macros to storage...");
   File macroFile = LittleFS.open(fileName, "w");
-  if (macroFile)
+  if (!macroFile)
   {
-    for (int i = 0; i < BUTTONCOUNT; i++)
-    {
-      size_t len = strlen(macros[i]);
-      macroFile.write((uint8_t *)&len, sizeof(size_t));
-      macroFile.write((uint8_t *)macros[i], len);
-    }
-    macroFile.close();
-    return true;
-  }
-  else
-  {
+    Serial.print("Failed to open ");
+    Serial.println(fileName);
     return false;
   }
+
+  JsonDocument doc;
+
+  // Create JSON structure
+  for (int i = 0; i < BUTTONCOUNT; i++)
+  {
+    doc[buttonNames[i]] = macros[i];
+  }
+
+  // Serialize JSON to file
+  if (serializeJson(doc, macroFile) == 0)
+  {
+    Serial.println("Nothing to write to file");
+    macroFile.close();
+    return false;
+  }
+  Serial.println("Macros written to storage");
+  macroFile.close();
+  return true;
 }
 
 void loadMacros(char *macroArray[], const char *fileName)
 {
-  // Load macros from storage
+  Serial.println("Loading macros from storage...");
   File macroFile = LittleFS.open(fileName, "r");
-  if (macroFile)
+  if (!macroFile)
   {
-    for (int i = 0; i < BUTTONCOUNT; i++)
-    {
-      size_t len;
-      if (macroFile.read((uint8_t *)&len, sizeof(size_t)) == sizeof(size_t))
-      {
-        if (len < MACRO_LENGTH)
-        {
-          macroFile.read((uint8_t *)macroArray[i], len);
-          macroArray[i][len] = '\0'; // Ensure null termination
-        }
-      }
-    }
-    macroFile.close();
+    Serial.print("Failed to open ");
+    Serial.println(fileName);
+    return;
   }
-  else
+
+  JsonDocument doc;
+
+  // Parse JSON from file
+  DeserializationError error = deserializeJson(doc, macroFile);
+  macroFile.close();
+
+  if (error)
   {
-    // File not found, initialize with empty strings
-    for (int i = 0; i < BUTTONCOUNT; i++)
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+  }
+
+  // Load values into macro arrays
+  for (int i = 0; i < BUTTONCOUNT; i++)
+  {
+    if (doc.containsKey(buttonNames[i]))
     {
-      macroArray[i] = EMPTY_BUTTON_TEXT;
+      Serial.print("Loading macro for ");
+      Serial.println(buttonNames[i]);
+      const char *macro = doc[buttonNames[i]].as<const char *>();
+      if (macro)
+      {
+        strncpy(macroArray[i], macro, MACRO_LENGTH - 1);
+        macroArray[i][MACRO_LENGTH - 1] = '\0'; // Ensure null termination
+      }
     }
   }
 }
+
+// // cost File dir = LittleFS.open("/");
+// // ls (dir, 0);
+// void ls(File dir, int numTabs)
+// {
+//   while (true)
+//   {
+
+//     File entry = dir.openNextFile();
+//     if (!entry)
+//     {
+//       // no more files
+//       break;
+//     }
+//     for (uint8_t i = 0; i < numTabs; i++)
+//     {
+//       Serial.print('\t');
+//     }
+//     Serial.print(entry.name());
+//     if (entry.isDirectory())
+//     {
+//       Serial.println("/");
+//       ls(entry, numTabs + 1);
+//     }
+//     else
+//     {
+//       // files have sizes, directories do not
+//       Serial.print("\t\t");
+//       Serial.println(entry.size(), DEC);
+//     }
+//     entry.close();
+//   }
+// }
