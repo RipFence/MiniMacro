@@ -30,9 +30,10 @@
 #define DOUBLE_MACRO_FILE "/double.txt"
 
 // Display Options
+#define DISPLAY_POWER_PIN 38
 #define SDA_PIN 34 // I2C
 #define SCL_PIN 36 // I2C
-#define SPLASHMESSAGE "MiniMacro v1.0.0  Thanks Dad!"
+#define SPLASHMESSAGE "MiniMacro"
 #define TIMER_NUMBER 0
 #define TIMER_PRESCALER 8000 // (80MHz / 8000) = 10kHz = 0.01ms
 

@@ -41,6 +41,7 @@ bool storageSetup()
   if (!LittleFS.begin())
   {
     // Failed to mount filesystem
+    Serial.println("Failed to mount filesystem.  Formatting...");
     LittleFS.format(); // Try formatting and mounting again
     if (!LittleFS.begin())
     {
@@ -121,8 +122,6 @@ void loadMacros(char *macroArray[], const char *fileName)
   {
     if (doc.containsKey(buttonNames[i]))
     {
-      Serial.print("Loading macro for ");
-      Serial.println(buttonNames[i]);
       const char *macro = doc[buttonNames[i]].as<const char *>();
       if (macro)
       {

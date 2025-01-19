@@ -14,7 +14,7 @@ void setup()
 
   delay(200);
 
-  // displaySetup();
+  displaySetup();
   storageSetup();
   wifiSetup();
 
@@ -24,11 +24,12 @@ void setup()
 
   configSetup();
   Serial.println("Setup complete!");
+  displayPrint("Ready", 2, 20, 15);
 }
 
 void loop()
 {
-  // displayLoop();
+  displayLoop();
   // buttonLoop();
   wifiLoop();
   configLoop();

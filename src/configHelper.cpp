@@ -8,9 +8,10 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
+#include <nvs_flash.h>
 
 AsyncWebServer server(80);
-bool needsConfigSave = false;
+bool needsReboot = false;
 
 // Callback for /
 void onRoot(AsyncWebServerRequest *request)
@@ -26,7 +27,6 @@ void onSaveMacros(AsyncWebServerRequest *request)
   // browser has submitted form so collect the field values and process/store
   Serial.println("in onSaveMacros");
 }
-
 void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
 {
   Serial.println("in onSaveMacrosBody");
@@ -71,8 +71,12 @@ void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
   }
 
   // Flag for saving the config
-  needsConfigSave = true;
-  request->send(200, "text/plain", "Macros saved successfully");
+  // Save the updated macros to storage
+  Serial.println("Saving config...");
+  saveMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
+  saveMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
+  request->send(200, "text/plain", "Macros saved successfully.  Restarting MiniMacro...");
+  needsReboot = true;
 }
 
 void onGetMacros(AsyncWebServerRequest *request)
@@ -90,6 +94,15 @@ void onGetMacros(AsyncWebServerRequest *request)
   request->send(200, "text/html", jsonStr);
 }
 
+void onFactoryReset(AsyncWebServerRequest *request)
+{
+  Serial.println("Resetting to factory defaults");
+  nvs_flash_erase(); // erase the NVS partition and...
+  nvs_flash_init();  // initialize the NVS partition.
+  LittleFS.format(); // Format Flash
+  request->send(200, "text/plain", "Reset to Factory Defaults.  Restarting MiniMacro...");
+  needsReboot = true;
+}
 void onNotFound(AsyncWebServerRequest *request)
 {
   Serial.println("in onNotFound()");
@@ -112,6 +125,9 @@ void configSetup()
   // respond to GET requests on URL /heap
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(200, "text/plain", String(ESP.getFreeHeap())); });
+
+  server.on("/factory-reset", HTTP_GET, [](AsyncWebServerRequest *request)
+            { onFactoryReset(request); });
 
   // attach filesystem root at URL /fs
   server.serveStatic("/fs", LittleFS, "/");
@@ -136,14 +152,10 @@ void configSetup()
 
 void configLoop()
 {
-  if (needsConfigSave)
+  if (needsReboot)
   {
-    Serial.println("Saving config...");
-    needsConfigSave = false;
-    // Save the updated macros to storage
-    saveMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
-    saveMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
-    delay(1000);
+    needsReboot = false;
+    delay(500);
     // Restart the ESP to apply the changes
     ESP.restart();
   }

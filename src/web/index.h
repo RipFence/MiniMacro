@@ -57,27 +57,51 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     textarea {
-      width: 100%;
+      width: calc(100% - 20px); /* Account for padding */
+      margin: 5px 10px;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
       resize: vertical;
       font-size: 14px;
+      box-sizing: border-box;
     }
 
-    button[type="submit"] {
+    button {
       padding: 12px 20px;
       border: none;
       border-radius: 4px;
-      background-color: #264653;
-      color: white;
       font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s;
     }
 
-    button[type="submit"]:hover {
+    button[type="button"] {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    #save-macros {
+      background-color: #264653;
+      color: white;
+    }
+
+    #save-macros:hover {
       background-color: #1d3557;
+    }
+
+    #factory-reset {
+      background-color: #e63946;
+      color: white;
+      margin-top: 20px;
+    }
+
+    #factory-reset:hover {
+      background-color: #c1121f;
+    }
+
+    .button-container {
+      padding: 0 10px;
     }
 
     .Red {
@@ -176,7 +200,10 @@ const char index_html[] PROGMEM = R"rawliteral(
           placeholder="Enter macro for White Double Click"></textarea>
       </div>
 
-      <button type="button" id="save-macros" onclick="onClickSave()">Save Macros</button>
+      <div class="button-container">
+        <button type="button" id="save-macros" onclick="onClickSave()">Save Macros</button>
+        <button type="button" id="factory-reset" onclick="onClickFactoryReset()">Erase Everything</button>
+      </div>
     </form>
   </div>
 
@@ -232,6 +259,23 @@ const char index_html[] PROGMEM = R"rawliteral(
           console.error('Error:', error);
           alert('Error saving macros');
         });
+    }
+    function onClickFactoryReset() {
+      if (confirm('WARNING: This will erase all your macros and reset to factory defaults. Are you sure?')) {
+        fetch('/factory-reset')
+          .then(response => {
+            if (response.ok) {
+              alert('Device is resetting to factory defaults...');
+              // The server will restart the ESP after reset
+            } else {
+              alert('Error resetting device');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error resetting device');
+          });
+      }
     }
   </script>
 </body>

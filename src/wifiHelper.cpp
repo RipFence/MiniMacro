@@ -134,7 +134,7 @@ FS *filesystem = &SPIFFS;
 #endif
 
 // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, or GPIO2/TXD1 of NodeMCU control on-board LED
-#define PIN_LED LED_BUILTIN
+
 
 // Now support ArduinoJson 6.0.0+ ( tested with v6.14.1 )
 #include <ArduinoJson.h> //https://github.com/bblanchon/ArduinoJson
@@ -620,12 +620,6 @@ bool saveFileFSConfigFile()
   return true;
 }
 
-void toggleLED()
-{
-  // toggle state
-  digitalWrite(PIN_LED, !digitalRead(PIN_LED));
-}
-
 #if USE_ESP_WIFIMANAGER_NTP
 
 void printLocalTime()
@@ -807,7 +801,6 @@ void wifiSetup()
 {
   // set internal led pin as output and internal button as input
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
-  pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.print(F("\nStarting Async_AutoConnectWithFSParams using "));
   Serial.print(FS_Name);
@@ -1150,7 +1143,6 @@ void wifiSetup()
 
 void onPortalButton()
 {
-  digitalWrite(LED_BUILTIN, LED_ON); // turn the LED on by making the voltage LOW to tell us we are in configuration mode.
   AsyncWebServer webServer(HTTP_PORT);
   AsyncDNSServer dnsServer;
   ESPAsync_WiFiManager ESPAsync_wifiManager(&webServer, &dnsServer, "ConfigOnSwitch");
