@@ -11,3 +11,7 @@ void displayClear();
 void displayPrint(const char text[], int textSize = 1, int x = 0, int y = 0);
 void displayShowFor(const char text[], unsigned long ms, int textSize = 1, int x = 0, int y = 0);
 void displayLogo();
+void displayReady();
+bool displayIsOn();
+void displayOff();
+void displayOn();

@@ -135,7 +135,6 @@ FS *filesystem = &SPIFFS;
 
 // Pin D2 mapped to pin GPIO2/ADC12 of ESP32, or GPIO2/TXD1 of NodeMCU control on-board LED
 
-
 // Now support ArduinoJson 6.0.0+ ( tested with v6.14.1 )
 #include <ArduinoJson.h> //https://github.com/bblanchon/ArduinoJson
 

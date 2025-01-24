@@ -9,6 +9,7 @@
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <nvs_flash.h>
+#include <ESPmDNS.h>
 
 AsyncWebServer server(80);
 bool needsReboot = false;
@@ -120,6 +121,15 @@ void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uin
 
 void configSetup()
 {
+  Serial.println("Configuring mDNS...");
+  if (!MDNS.begin("minimacro"))
+  {
+    Serial.println("Error setting up MDNS responder!");
+    while (1)
+    {
+      delay(1000);
+    }
+  }
   Serial.println(("Configuring WebServer..."));
 
   // respond to GET requests on URL /heap

@@ -34,8 +34,7 @@
 #define SDA_PIN 34 // I2C
 #define SCL_PIN 36 // I2C
 #define SPLASHMESSAGE "MiniMacro"
-#define TIMER_NUMBER 0
-#define TIMER_PRESCALER 8000 // (80MHz / 8000) = 10kHz = 0.01ms
+#define SCREEN_OFF_TIMEOUT 30000 // 30 seconds
 
 // Keyboard Options
 #define INTER_CHARACTER_DELAY 250 // Wait in ms between characters

@@ -20,17 +20,17 @@ void setup()
 
   loadMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
   loadMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
-  // buttonSetup(singleMacroBuffer, doubleMacroBuffer);
+  buttonSetup(singleMacroBuffer, doubleMacroBuffer);
 
   configSetup();
   Serial.println("Setup complete!");
-  displayPrint("Ready", 2, 20, 15);
+  displayReady();
 }
 
 void loop()
 {
   displayLoop();
-  // buttonLoop();
+  buttonLoop();
   wifiLoop();
   configLoop();
 }
