@@ -5,31 +5,27 @@
 #include "displayHelper.h"
 #include "storageHelper.h"
 #include "configHelper.h"
+#include "keyboardHelper.h"
 
 void setup()
 {
-  Serial.begin(115200);
-  while (!Serial)
-    ;
-
-  delay(200);
-
   displaySetup();
-  storageSetup();
-  wifiSetup();
+  keyboardSetup(); // Initialize HID Keyboard
 
+  storageSetup();
   loadMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
   loadMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
-  buttonSetup(singleMacroBuffer, doubleMacroBuffer);
 
+  buttonSetup(singleMacroBuffer, doubleMacroBuffer);
+  wifiSetup();
   configSetup();
-  Serial.println("Setup complete!");
   displayReady();
 }
 
 void loop()
 {
   displayLoop();
+  processHID();
   buttonLoop();
   wifiLoop();
   configLoop();

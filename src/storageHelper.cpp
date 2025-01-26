@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h> // JSON 7.x
 #include "storageHelper.h"
+#include "displayHelper.h"
 #include "buttonHelper.h"
 #include "web/index.h"
 
@@ -41,7 +42,7 @@ bool storageSetup()
   if (!LittleFS.begin())
   {
     // Failed to mount filesystem
-    Serial.println("Failed to mount filesystem.  Formatting...");
+    displayShowFor("Formatting...", 10000, 1, 0, 0);
     LittleFS.format(); // Try formatting and mounting again
     if (!LittleFS.begin())
     {
@@ -64,12 +65,10 @@ bool storageSetup()
 
 bool saveMacros(char *macros[], const char *fileName)
 {
-  Serial.println("Saving macros to storage...");
+  displayShowFor("Saving...", 3000, 2, 0, 0);
   File macroFile = LittleFS.open(fileName, "w");
   if (!macroFile)
   {
-    Serial.print("Failed to open ");
-    Serial.println(fileName);
     return false;
   }
 
@@ -84,23 +83,20 @@ bool saveMacros(char *macros[], const char *fileName)
   // Serialize JSON to file
   if (serializeJson(doc, macroFile) == 0)
   {
-    Serial.println("Nothing to write to file");
     macroFile.close();
     return false;
   }
-  Serial.println("Macros written to storage");
   macroFile.close();
   return true;
 }
 
 void loadMacros(char *macroArray[], const char *fileName)
 {
-  Serial.println("Loading macros from storage...");
+  displayShowFor("Loading...", 3000, 2, 0, 0);
   File macroFile = LittleFS.open(fileName, "r");
   if (!macroFile)
   {
-    Serial.print("Failed to open ");
-    Serial.println(fileName);
+    displayPrint("Failed to load", 1, 0, 0);
     return;
   }
 
@@ -112,8 +108,6 @@ void loadMacros(char *macroArray[], const char *fileName)
 
   if (error)
   {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
     return;
   }
 
@@ -131,36 +125,3 @@ void loadMacros(char *macroArray[], const char *fileName)
     }
   }
 }
-
-// // cost File dir = LittleFS.open("/");
-// // ls (dir, 0);
-// void ls(File dir, int numTabs)
-// {
-//   while (true)
-//   {
-
-//     File entry = dir.openNextFile();
-//     if (!entry)
-//     {
-//       // no more files
-//       break;
-//     }
-//     for (uint8_t i = 0; i < numTabs; i++)
-//     {
-//       Serial.print('\t');
-//     }
-//     Serial.print(entry.name());
-//     if (entry.isDirectory())
-//     {
-//       Serial.println("/");
-//       ls(entry, numTabs + 1);
-//     }
-//     else
-//     {
-//       // files have sizes, directories do not
-//       Serial.print("\t\t");
-//       Serial.println(entry.size(), DEC);
-//     }
-//     entry.close();
-//   }
-// }

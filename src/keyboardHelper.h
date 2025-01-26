@@ -1,7 +1,7 @@
 #pragma once
 
-// setupKeyboard() should be called once in the main setup() function
-void setupKeyboard();
+// keyboardSetup() should be called once in the main setup() function
+void keyboardSetup();
 
 // processHID() should be called in the main loop
 void processHID();

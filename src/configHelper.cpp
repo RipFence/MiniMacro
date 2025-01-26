@@ -17,7 +17,6 @@ bool needsReboot = false;
 // Callback for /
 void onRoot(AsyncWebServerRequest *request)
 {
-  Serial.println("in onRoot()");
   // ls(LittleFS.open("/"), 0);
   // request->send(LittleFS, "/index.html", "text/html");
   request->send_P(200, "text/html", index_html);
@@ -26,12 +25,9 @@ void onRoot(AsyncWebServerRequest *request)
 void onSaveMacros(AsyncWebServerRequest *request)
 {
   // browser has submitted form so collect the field values and process/store
-  Serial.println("in onSaveMacros");
 }
 void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
 {
-  Serial.println("in onSaveMacrosBody");
-
   if (!json.is<JsonObject>())
   {
     request->send(400, "text/plain", "Invalid JSON format");
@@ -73,7 +69,6 @@ void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
 
   // Flag for saving the config
   // Save the updated macros to storage
-  Serial.println("Saving config...");
   saveMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
   saveMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
   request->send(200, "text/plain", "Macros saved successfully.  Restarting MiniMacro...");
@@ -83,7 +78,6 @@ void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
 void onGetMacros(AsyncWebServerRequest *request)
 {
   // web server --> browser client --> web server request to "/json"
-  Serial.println("in GetMacros()");
   String jsonStr;
   JsonDocument doc;
   for (int i = 0; i < BUTTONCOUNT; i++)
@@ -97,7 +91,6 @@ void onGetMacros(AsyncWebServerRequest *request)
 
 void onFactoryReset(AsyncWebServerRequest *request)
 {
-  Serial.println("Resetting to factory defaults");
   nvs_flash_erase(); // erase the NVS partition and...
   nvs_flash_init();  // initialize the NVS partition.
   LittleFS.format(); // Format Flash
@@ -106,31 +99,25 @@ void onFactoryReset(AsyncWebServerRequest *request)
 }
 void onNotFound(AsyncWebServerRequest *request)
 {
-  Serial.println("in onNotFound()");
   // Handle Unknown Request
   request->send(404, "text/html", "<html><body><h1>404 Not Found</h1></body></html>");
 }
 void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
-  Serial.println("in onBody()");
 }
 void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-  Serial.println("in onUpload()");
 }
 
 void configSetup()
 {
-  Serial.println("Configuring mDNS...");
   if (!MDNS.begin("minimacro"))
   {
-    Serial.println("Error setting up MDNS responder!");
     while (1)
     {
       delay(1000);
     }
   }
-  Serial.println(("Configuring WebServer..."));
 
   // respond to GET requests on URL /heap
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -156,8 +143,6 @@ void configSetup()
   server.onFileUpload(onUpload);
 
   server.begin();
-  Serial.print("Connect to: http://");
-  Serial.println(WiFi.localIP());
 }
 
 void configLoop()

@@ -1,4 +1,5 @@
 #include "wifiHelper.h"
+#include "displayHelper.h"
 #include "config.h"
 // #include <WiFi.h>
 
@@ -441,6 +442,7 @@ uint8_t connectMultiWiFi()
     LOGERROR1(F("WiFi connected after time: "), i);
     LOGERROR3(F("SSID:"), WiFi.SSID(), F(",RSSI="), WiFi.RSSI());
     LOGERROR3(F("Channel:"), WiFi.channel(), F(",IP address:"), WiFi.localIP());
+    displayShowFor("WiFi OK", 2000, 2, 0);
   }
   else
   {
@@ -462,7 +464,6 @@ bool shouldSaveConfig = false;
 // callback notifying us of the need to save config
 void saveConfigCallback()
 {
-  Serial.println(F("Should save config"));
   shouldSaveConfig = true;
 }
 
@@ -472,95 +473,50 @@ bool loadFileFSConfigFile()
   // FileFS.format();
 
   // read configuration from FS json
-  Serial.println(F("Mounting FS..."));
-
   if (FileFS.begin())
   {
-    Serial.println(F("Mounted file system"));
-
     if (FileFS.exists(configFileName))
     {
       // file exists, reading and loading
-      Serial.println(F("Reading config file"));
       File configFile = FileFS.open(configFileName, "r");
 
       if (configFile)
       {
-        Serial.print(F("Opened config file, size = "));
         size_t configFileSize = configFile.size();
-        Serial.println(configFileSize);
-
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[configFileSize + 1]);
 
         configFile.readBytes(buf.get(), configFileSize);
 
-        Serial.print(F("\nJSON parseObject() result : "));
+        // #if (ARDUINOJSON_VERSION_MAJOR >= 6)
+        //         DynamicJsonDocument json(1024);
+        //         auto deserializeError = deserializeJson(json, buf.get(), configFileSize);
 
-#if (ARDUINOJSON_VERSION_MAJOR >= 6)
-        DynamicJsonDocument json(1024);
-        auto deserializeError = deserializeJson(json, buf.get(), configFileSize);
+        //         if (deserializeError)
+        //         {
+        //           return false;
+        //         }
+        //         else
+        //         {
+        //           if (json["blynk_server"])
+        //             strncpy(blynk_server, json["blynk_server"], sizeof(blynk_server));
 
-        if (deserializeError)
-        {
-          Serial.println(F("failed"));
-          return false;
-        }
-        else
-        {
-          Serial.println(F("OK"));
+        //           if (json["blynk_port"])
+        //             strncpy(blynk_port, json["blynk_port"], sizeof(blynk_port));
 
-          if (json["blynk_server"])
-            strncpy(blynk_server, json["blynk_server"], sizeof(blynk_server));
+        //           if (json["blynk_token"])
+        //             strncpy(blynk_token, json["blynk_token"], sizeof(blynk_token));
 
-          if (json["blynk_port"])
-            strncpy(blynk_port, json["blynk_port"], sizeof(blynk_port));
+        //           if (json["mqtt_server"])
+        //             strncpy(mqtt_server, json["mqtt_server"], sizeof(mqtt_server));
 
-          if (json["blynk_token"])
-            strncpy(blynk_token, json["blynk_token"], sizeof(blynk_token));
+        //           if (json["mqtt_port"])
+        //             strncpy(mqtt_port, json["mqtt_port"], sizeof(mqtt_port));
+        //         }
 
-          if (json["mqtt_server"])
-            strncpy(mqtt_server, json["mqtt_server"], sizeof(mqtt_server));
-
-          if (json["mqtt_port"])
-            strncpy(mqtt_port, json["mqtt_port"], sizeof(mqtt_port));
-        }
-
-        // serializeJson(json, Serial);
-        serializeJsonPretty(json, Serial);
-#else
-        DynamicJsonBuffer jsonBuffer;
-        // Parse JSON string
-        JsonObject &json = jsonBuffer.parseObject(buf.get());
-        // Test if parsing succeeds.
-
-        if (json.success())
-        {
-          Serial.println("OK");
-
-          if (json["blynk_server"])
-            strncpy(blynk_server, json["blynk_server"], sizeof(blynk_server));
-
-          if (json["blynk_port"])
-            strncpy(blynk_port, json["blynk_port"], sizeof(blynk_port));
-
-          if (json["blynk_token"])
-            strncpy(blynk_token, json["blynk_token"], sizeof(blynk_token));
-
-          if (json["mqtt_server"])
-            strncpy(mqtt_server, json["mqtt_server"], sizeof(mqtt_server));
-
-          if (json["mqtt_port"])
-            strncpy(mqtt_port, json["mqtt_port"], sizeof(mqtt_port));
-        }
-        else
-        {
-          Serial.println(F("failed"));
-          return false;
-        }
-        // json.printTo(Serial);
-        json.prettyPrintTo(Serial);
-#endif
+        //         // serializeJson(json, Serial);
+        //         serializeJsonPretty(json, Serial);
+        // #endif
 
         configFile.close();
       }
@@ -568,7 +524,6 @@ bool loadFileFSConfigFile()
   }
   else
   {
-    Serial.println(F("Failed to mount FS"));
     return false;
   }
   return true;
@@ -576,7 +531,6 @@ bool loadFileFSConfigFile()
 
 bool saveFileFSConfigFile()
 {
-  Serial.println(F("Saving config"));
 
 #if (ARDUINOJSON_VERSION_MAJOR >= 6)
   DynamicJsonDocument json(1024);
@@ -596,22 +550,15 @@ bool saveFileFSConfigFile()
 
   if (!configFile)
   {
-    Serial.println(F("Failed to open config file for writing"));
-
     return false;
   }
 
-#if (ARDUINOJSON_VERSION_MAJOR >= 6)
-  // serializeJson(json, Serial);
-  serializeJsonPretty(json, Serial);
-  // Write data to file and close it
-  serializeJson(json, configFile);
-#else
-  // json.printTo(Serial);
-  json.prettyPrintTo(Serial);
-  // Write data to file and close it
-  json.printTo(configFile);
-#endif
+  // #if (ARDUINOJSON_VERSION_MAJOR >= 6)
+  //   // serializeJson(json, Serial);
+  //   serializeJsonPretty(json, Serial);
+  //   // Write data to file and close it
+  //   serializeJson(json, configFile);
+  // #endif
 
   configFile.close();
   // end save
@@ -630,8 +577,6 @@ void printLocalTime()
 
   if (now > 1451602800)
   {
-    Serial.print("Local Date/Time: ");
-    Serial.print(ctime(&now));
   }
 #else
   struct tm timeinfo;
@@ -642,8 +587,6 @@ void printLocalTime()
   // You can get from timeinfo : tm_year, tm_mon, tm_mday, tm_hour, tm_min, tm_sec
   if (timeinfo.tm_year > 100)
   {
-    Serial.print("Local Date/Time: ");
-    Serial.print(asctime(&timeinfo));
   }
 #endif
 }
@@ -657,19 +600,12 @@ void heartBeatPrint()
 #else
   static int num = 1;
 
-  if (WiFi.status() == WL_CONNECTED)
-    Serial.print(F("H")); // H means connected to WiFi
-  else
-    Serial.print(F("F")); // F means not connected to WiFi
-
   if (num == 80)
   {
-    Serial.println();
     num = 1;
   }
   else if (num++ % 10 == 0)
   {
-    Serial.print(F(" "));
   }
 #endif
 }
@@ -678,7 +614,6 @@ void check_WiFi()
 {
   if ((WiFi.status() != WL_CONNECTED))
   {
-    Serial.println(F("\nWiFi lost. Call connectMultiWiFi in loop"));
     connectMultiWiFi();
   }
 }
@@ -801,17 +736,9 @@ void wifiSetup()
   // set internal led pin as output and internal button as input
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
 
-  Serial.print(F("\nStarting Async_AutoConnectWithFSParams using "));
-  Serial.print(FS_Name);
-  Serial.print(F(" on "));
-  Serial.println(ARDUINO_BOARD);
-  Serial.println(ESP_ASYNC_WIFIMANAGER_VERSION);
-
 #if defined(ESP_ASYNC_WIFIMANAGER_VERSION_INT)
   if (ESP_ASYNC_WIFIMANAGER_VERSION_INT < ESP_ASYNC_WIFIMANAGER_VERSION_MIN)
   {
-    Serial.print("Warning. Must use this example on Version later than : ");
-    Serial.println(ESP_ASYNC_WIFIMANAGER_VERSION_MIN_TARGET);
   }
 #endif
 
@@ -829,18 +756,8 @@ void wifiSetup()
     FileFS.format();
 #endif
 
-    Serial.println(F("SPIFFS/LittleFS failed! Already tried formatting."));
-
     if (!FileFS.begin())
     {
-      // prevents debug info from the library to hide err message.
-      delay(100);
-
-#if USE_LITTLEFS
-      Serial.println(F("LittleFS failed!. Please use SPIFFS or EEPROM. Stay forever"));
-#else
-      Serial.println(F("SPIFFS failed!. Please use LittleFS or EEPROM. Stay forever"));
-#endif
 
       while (true)
       {
@@ -932,7 +849,6 @@ void wifiSetup()
   Router_Pass = ESPAsync_wifiManager.WiFi_Pass();
 
   // Remove this line if you do not want to see WiFi password printed
-  Serial.println("ESP Self-Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
 
   bool configDataLoaded = false;
 
@@ -951,7 +867,6 @@ void wifiSetup()
     configDataLoaded = true;
 
     ESPAsync_wifiManager.setConfigPortalTimeout(120); // If no access point name has been previously entered disable timeout.
-    Serial.println(F("Got stored Credentials. Timeout 120s for Config Portal"));
 
 #if USE_ESP_WIFIMANAGER_NTP
     if (strlen(WM_config.TZ_Name) > 0)
@@ -967,14 +882,12 @@ void wifiSetup()
     }
     else
     {
-      Serial.println(F("Current Timezone is not set. Enter Config Portal to set."));
     }
 #endif
   }
   else
   {
     // Enter CP only if no stored SSID on flash and file
-    Serial.println(F("Open Config Portal without Timeout: No stored Credentials."));
     initialConfig = true;
   }
 
@@ -987,20 +900,8 @@ void wifiSetup()
 
   if (initialConfig)
   {
-    Serial.println(F("We haven't got any access point credentials, so get them now"));
 
-    Serial.print(F("Starting configuration portal @ "));
-
-#if USE_CUSTOM_AP_IP
-    Serial.print(APStaticIP);
-#else
-    Serial.print(F("192.168.4.1"));
-#endif
-
-    Serial.print(F(", SSID = "));
-    Serial.print(AP_SSID);
-    Serial.print(F(", PWD = "));
-    Serial.println(AP_PASS);
+    displayPrint("Join WiFi: MiniMacro", 1);
 
 #if DISPLAY_STORED_CREDENTIALS_IN_CP
     // New. Update Credentials, got from loadConfigData(), to display on CP
@@ -1011,9 +912,11 @@ void wifiSetup()
     // Starts an access point
     // if (!ESPAsync_wifiManager.startConfigPortal((const char *) ssid.c_str(), password))
     if (!ESPAsync_wifiManager.startConfigPortal(AP_SSID.c_str(), AP_PASS.c_str()))
-      Serial.println(F("Not connected to WiFi but continuing anyway."));
+    {
+    }
     else
-      Serial.println(F("WiFi connected...yeey :)"));
+    {
+    }
 
     // Stored  for later usage, from v1.1.0, but clear first
     memset(&WM_config, 0, sizeof(WM_config));
@@ -1104,23 +1007,16 @@ void wifiSetup()
 
     if (WiFi.status() != WL_CONNECTED)
     {
-      Serial.println(F("ConnectMultiWiFi in setup"));
-
       connectMultiWiFi();
     }
   }
 
-  Serial.print(F("After waiting "));
-  Serial.print((float)(millis() - startedAt) / 1000L);
-  Serial.print(F(" secs more in setup(), connection result is "));
-
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.print(F("connected. Local IP: "));
-    Serial.println(WiFi.localIP());
   }
   else
-    Serial.println(ESPAsync_wifiManager.getStatus(WiFi.status()));
+  {
+  }
 
   // read updated parameters
   strncpy(blynk_server, custom_blynk_server.getValue(), sizeof(blynk_server));
@@ -1135,9 +1031,6 @@ void wifiSetup()
   {
     saveFileFSConfigFile();
   }
-
-  Serial.print("Local IP = ");
-  Serial.println(WiFi.localIP());
 }
 
 void onPortalButton()
@@ -1150,13 +1043,11 @@ void onPortalButton()
   ESPAsync_wifiManager.setCORSHeader("Your Access-Control-Allow-Origin");
   // Check if there is stored WiFi router/password credentials.
   // If not found, device will remain in configuration mode until switched off via webserver.
-  Serial.println(F("Opening configuration portal. "));
 
   Router_SSID = ESPAsync_wifiManager.WiFi_SSID();
   Router_Pass = ESPAsync_wifiManager.WiFi_Pass();
 
   // Remove this line if you do not want to see WiFi password printed
-  Serial.println("ESP Self-Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
 
   // From v1.1.0, Don't permit NULL password
   if ((Router_SSID != "") && (Router_Pass != ""))
@@ -1165,17 +1056,14 @@ void onPortalButton()
     wifiMulti.addAP(Router_SSID.c_str(), Router_Pass.c_str());
 
     ESPAsync_wifiManager.setConfigPortalTimeout(120); // If no access point name has been previously entered disable timeout.
-    Serial.println(F("Got ESP Self-Stored Credentials. Timeout 120s for Config Portal"));
   }
   else if (loadConfigData())
   {
     ESPAsync_wifiManager.setConfigPortalTimeout(120); // If no access point name has been previously entered disable timeout.
-    Serial.println(F("Got stored Credentials. Timeout 120s for Config Portal"));
   }
   else
   {
     // Enter CP only if no stored SSID on flash and file
-    Serial.println(F("Open Config Portal without Timeout: No stored Credentials."));
     initialConfig = true;
   }
 
@@ -1187,14 +1075,10 @@ void onPortalButton()
   // and goes into a blocking loop awaiting configuration
   if (!ESPAsync_wifiManager.startConfigPortal(WIFI_SSID, WIFI_PASSWORD))
   {
-    Serial.println(F("Not connected to WiFi but continuing anyway."));
   }
   else
   {
     // if you get here you have connected to the WiFi
-    Serial.println(F("connected...yeey :)"));
-    Serial.print(F("Local IP: "));
-    Serial.println(WiFi.localIP());
   }
 
   // Only clear then save data if CP entered and with new valid Credentials
@@ -1268,7 +1152,6 @@ void wifiLoop()
   // is configuration portal requested?
   if (digitalRead(TRIGGER_PIN) == LOW)
   {
-    Serial.println(F("\nConfiguration portal requested."));
     onPortalButton();
   }
 

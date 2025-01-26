@@ -160,23 +160,28 @@ void charToKeycode(const char c, uint8_t keycode[])
       keycode[0] = HID_KEY_0;
       keycode[1] = HID_KEY_SHIFT_LEFT;
       break;
-    default:
-      Serial.printf("Unsupported character: %c\n", c);
     }
   }
 }
 
 void _processMacroBuffer()
 {
+  // Read Position in the Macro Buffer
+  static int bufferIndex = 0;
+
   // Don't send the next key if keypress is already in progress
   // or too soon after last keypress
   if (keyUpTime > 0 || millis() < nextCharacterTime)
     return;
 
-  // Pop the first character from the macro buffer and shift left
-  char c = macroBuffer[0];
-  for (int i = 0; i < strlen(macroBuffer); i++)
-    macroBuffer[i] = macroBuffer[i + 1];
+  // Get the current character in the buffer and advance
+  char c = macroBuffer[bufferIndex];
+  bufferIndex++;
+  if (bufferIndex >= strlen(macroBuffer))
+  {
+    bufferIndex = 0;
+    macroBuffer[0] = 0; // empty the buffer
+  }
 
   // Convert the character to the corresponding HID keycode
   uint8_t keycode[6] = {0};
@@ -196,7 +201,7 @@ void _processMacroBuffer()
 void _processKeyUp()
 {
   // If the key is not pressed or the release time has not yet passed, do nothing
-  if (millis() < keyUpTime)
+  if (keyUpTime == 0 || millis() < keyUpTime)
     return;
 
   // Release the key to signal key up
@@ -213,8 +218,8 @@ void _processKeyUp()
   }
 }
 
-// setupKeyboard() should be called once in the main setup() function
-void setupKeyboard()
+// keyboardSetup() should be called once in the main setup() function
+void keyboardSetup()
 {
   if (!TinyUSBDevice.isInitialized())
   {
@@ -225,7 +230,7 @@ void setupKeyboard()
   usb_hid.setBootProtocol(HID_ITF_PROTOCOL_KEYBOARD);
   usb_hid.setPollInterval(2); // Default 10
   usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
-  usb_hid.setStringDescriptor("MiniMacro HID Keyboard");
+  usb_hid.setStringDescriptor("MiniMacro Keyboard");
   // Set up output report (on control endpoint) for Capslock indicator
   // usb_hid.setReportCallback(NULL, hid_report_callback);
 
@@ -255,14 +260,12 @@ bool sendString(char inputString[])
 {
   if (isSending)
   {
-    Serial.println("Macro sending in progress");
     return false;
   }
 
   // Validate that the input string is not too long
   if (strlen(inputString) > MAX_MACRO_LENGTH)
   {
-    Serial.println("Input string too long");
     return false;
   }
 

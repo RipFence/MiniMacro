@@ -11,11 +11,11 @@ unsigned long screenOffTimeout = 1;
 
 void displaySetup()
 {
-  Serial.println("Setting up display");
   // Setup I2C Pins
   pinMode(SDA_PIN, OUTPUT);
   pinMode(SCL_PIN, OUTPUT);
-  pinMode(DISPLAY_POWER_PIN, OUTPUT); // Turns Display on/off
+  pinMode(DISPLAY_POWER_PIN, OUTPUT);    // Turns Display on/off
+  digitalWrite(DISPLAY_POWER_PIN, HIGH); // turn on display
 
   // Initialize the I2C interface
   Wire.setPins(SDA_PIN, SCL_PIN);
@@ -24,7 +24,7 @@ void displaySetup()
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
   {
-    Serial.println(F("SSD1306 allocation failed"));
+    displayPrint("SSD1306 failed", 1);
     for (;;)
       ; // Don't proceed, loop forever
   }
@@ -98,6 +98,7 @@ void displayLogo()
   display.setCursor(32, 24);
   display.print("Thanks Dad!");
   display.display();
+  delay(3000);
   ClearDisplayTime = millis() + 10000;
   if (screenOffTimeout != 0)
     screenOffTimeout = ClearDisplayTime + SCREEN_OFF_TIMEOUT;
@@ -111,7 +112,7 @@ void displayReady()
   display.print("Ready");
   display.setTextSize(1);
   display.setCursor(0, 24);
-  display.print("http://minimacro.local");
+  display.print("Setup:minimacro.local");
   display.display();
   ClearDisplayTime = millis() + 30000;
   if (screenOffTimeout != 0)
