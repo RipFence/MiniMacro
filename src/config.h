@@ -24,7 +24,7 @@
 #define WHITE_BUTTON_PIN 10
 
 // Storage Options
-#define STORAGE_VERSION "1.0.0"
+#define STORAGE_VERSION "1.0.1"
 #define SINGLE_MACRO_FILE "/single.txt"
 #define DOUBLE_MACRO_FILE "/double.txt"
 
@@ -36,9 +36,8 @@
 #define SCREEN_OFF_TIMEOUT 30000 // 30 seconds
 
 // Keyboard Options
-#define INTER_CHARACTER_DELAY 50 // Wait in ms between characters
-#define KEYDOWN_DELAY 10         // Wait in ms before key is released
-#define MAX_MACRO_LENGTH 1023    // Maximum length of a macro
+#define INTER_CHARACTER_DELAY 20 // Wait in ms between characters
+#define KEYDOWN_DELAY 5          // Wait in ms before key is released
 #define RID_KEYBOARD 0           // Keyboard report ID
 
 #endif // CONFIG_H

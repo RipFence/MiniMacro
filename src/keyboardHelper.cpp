@@ -6,7 +6,7 @@
 // Global variables
 unsigned long keyUpTime = 0;
 unsigned long nextCharacterTime = 0;
-char macroBuffer[MAX_MACRO_LENGTH + 1] = {0};
+char macroBuffer[MACRO_LENGTH + 1] = {0};
 bool isSending = false;
 
 // HID report descriptor using TinyUSB's template
@@ -264,7 +264,7 @@ bool sendString(char inputString[])
   }
 
   // Validate that the input string is not too long
-  if (strlen(inputString) > MAX_MACRO_LENGTH)
+  if (strlen(inputString) > MACRO_LENGTH)
   {
     return false;
   }
