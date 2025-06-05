@@ -16,9 +16,42 @@
 AsyncWebServer server(80);
 bool needsReboot = false;
 
+// check if this string is an IP address
+boolean isIp(String str) {
+  for (size_t i = 0; i < str.length(); i++) {
+    int c = str.charAt(i);
+    if (c != '.' && (c < '0' || c > '9')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+String toStringIp(IPAddress ip) {
+  String res = "";
+  for (int i = 0; i < 3; i++) {
+    res += String((ip >> (8 * i)) & 0xFF) + ".";
+  }
+  res += String(((ip >> 8 * 3)) & 0xFF);
+  return res;
+}
+
+// Checks if the request is to me. If not, redirect it to me
+boolean isNotForMe(AsyncWebServerRequest *request) {
+  if (!isIp(request->host())) { // server.hostHeader()
+    Serial.println("Request redirected to captive portal");
+    request->redirect(String("http://") + toStringIp(WiFi.localIP()), 302);
+    return true;
+  }
+  return false;
+}
+
 // Callback for /
 void onRoot(AsyncWebServerRequest *request)
 {
+  if (isNotForMe(request)) { 
+    return;
+  }
   // ls(LittleFS.open("/"), 0);
   // request->send(LittleFS, "/index.html", "text/html");
   request->send(200, "text/html", index_html);
@@ -156,4 +189,12 @@ void configLoop()
     // Restart the ESP to apply the changes
     ESP.restart();
   }
+}
+
+void configStop()
+{
+  server.end();
+  MDNS.end();
+  LittleFS.end();
+  nvs_flash_deinit();
 }

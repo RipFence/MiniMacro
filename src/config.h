@@ -2,12 +2,14 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define AppVersion "1.1.0"
+
 // WiFi Access Point Options
 #define WIFI_SSID "MiniMacro"
-#define WIFI_PASSWORD ""
-#define WIFI_CONNECT_TIMEOUT 15 // in seconds
-#define WIFI_CONFIG_FILENAME "/wifi.dat"
-#define TRIGGER_PIN 0
+// #define WIFI_PASSWORD ""
+// #define WIFI_CONNECT_TIMEOUT 15 // in seconds
+// #define WIFI_CONFIG_FILENAME "/wifi.dat"
+// #define TRIGGER_PIN 0
 
 // Macro Options
 #define MACRO_LENGTH 2048

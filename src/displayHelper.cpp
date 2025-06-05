@@ -7,7 +7,7 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 unsigned long ClearDisplayTime = 0;
-unsigned long screenOffTimeout = 1;
+unsigned long _screenOffTimeout = 1;
 
 void displaySetup()
 {
@@ -44,7 +44,7 @@ void displayLoop()
   }
 
   // Time to turn the display off?
-  if (screenOffTimeout > 1 && millis() >= screenOffTimeout)
+  if (_screenOffTimeout > 1 && millis() >= _screenOffTimeout)
   {
     displayOff();
   }
@@ -69,8 +69,7 @@ void displayPrint(const char text[], int textSize, int x, int y)
   display.setCursor(x, y);
   display.print(text);
   display.display();
-  if (screenOffTimeout != 0)
-    screenOffTimeout = millis() + SCREEN_OFF_TIMEOUT;
+  resetScreenTimeout();
 }
 
 void displayShowFor(const char text[], unsigned long ms, int textSize, int x, int y)
@@ -81,10 +80,7 @@ void displayShowFor(const char text[], unsigned long ms, int textSize, int x, in
   }
   displayPrint(text, textSize, x, y);
   ClearDisplayTime = millis() + ms;
-  if (screenOffTimeout != 0)
-  {
-    screenOffTimeout = millis() + ms + SCREEN_OFF_TIMEOUT;
-  }
+  resetScreenTimeout(ms);
 }
 
 void displayLogo()
@@ -100,8 +96,7 @@ void displayLogo()
   display.display();
   delay(3000);
   ClearDisplayTime = millis() + 10000;
-  if (screenOffTimeout != 0)
-    screenOffTimeout = ClearDisplayTime + SCREEN_OFF_TIMEOUT;
+  resetScreenTimeout(10000);
 }
 void displayReady()
 {
@@ -115,20 +110,34 @@ void displayReady()
   display.print("Setup:minimacro.local");
   display.display();
   ClearDisplayTime = millis() + 30000;
-  if (screenOffTimeout != 0)
-    screenOffTimeout = ClearDisplayTime + SCREEN_OFF_TIMEOUT;
+  resetScreenTimeout(30000);
 }
 void displayOn()
 {
   digitalWrite(DISPLAY_POWER_PIN, HIGH);
   displayClear();
-  if (screenOffTimeout != 0)
-    screenOffTimeout = millis() + SCREEN_OFF_TIMEOUT;
+  resetScreenTimeout();
 }
 void displayOff()
 {
   digitalWrite(DISPLAY_POWER_PIN, LOW);
-  if (screenOffTimeout != 0)
-    screenOffTimeout = 1;
+  setScreenTimeout(1);
 }
 bool displayIsOn() { return digitalRead(DISPLAY_POWER_PIN) == HIGH; }
+
+void setScreenTimeout(unsigned long timeout)
+{
+  if (_screenOffTimeout != 0) { _screenOffTimeout = timeout; }
+}
+void disableScreenTimeout()
+{
+    _screenOffTimeout = 0;
+}
+void enableScreenTimeout()
+{
+    _screenOffTimeout = millis() + SCREEN_OFF_TIMEOUT;
+}
+void resetScreenTimeout(unsigned long ms = 0)
+{
+    setScreenTimeout(millis() + ms + SCREEN_OFF_TIMEOUT);
+}

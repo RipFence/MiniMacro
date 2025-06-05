@@ -27,6 +27,9 @@ void loop()
   displayLoop();
   processHID();
   buttonLoop();
-  wifiLoop();
-  configLoop();
+  if (configMode)
+  {
+    wifiLoop();
+    configLoop();
+  }
 }

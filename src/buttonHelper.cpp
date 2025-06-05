@@ -3,17 +3,10 @@
 #include "buttonHelper.h"
 #include "keyboardHelper.h"
 #include "displayHelper.h"
+#include "wifiHelper.h"
+#include "configHelper.h"
 
 // Global Variables
-const char *buttonNames[] = {"RED", "GREEN", "BLUE", "YELLOW", "BLACK", "WHITE"};
-const int buttonPins[] = { // GPIO pins, same order as above
-    RED_BUTTON_PIN,
-    GREEN_BUTTON_PIN,
-    BLUE_BUTTON_PIN,
-    YELLOW_BUTTON_PIN,
-    BLACK_BUTTON_PIN,
-    WHITE_BUTTON_PIN};
-
 char **singleBuffer;
 char **doubleBuffer;
 
@@ -53,10 +46,55 @@ void onClick(Button2 &btn)
   case triple_click:
     return;
   case long_click:
+    if (btnNum == WHITE || btnNum == YELLOW) {
+      // Handle White/Yellow button combo
+      if (btnNum == WHITE && buttons[YELLOW].isPressed())
+      {
+        buttons[YELLOW].resetPressedState();
+        if (configMode)
+        {
+          stopConfigMode();
+        }
+        else
+        {
+          startConfigMode();
+        }
+      }
+      else if (btnNum == YELLOW && buttons[WHITE].isPressed())
+      {
+        buttons[WHITE].resetPressedState();
+        if (configMode)
+        {
+          stopConfigMode();
+        }
+        else
+        {
+          startConfigMode();
+        }
+      }
+    }
     break;
   case empty:
     return;
   }
+}
+
+void startConfigMode()
+{
+  wifiSetup();
+  configSetup();
+  disableScreenTimeout();
+  displayPrint("Config Mode", 2, 0, 0);
+  configMode = true;
+}
+
+void stopConfigMode()
+{
+  configMode = false;
+  configStop();
+  wifiStop();
+  enableScreenTimeout();
+  displayReady();
 }
 
 void buttonSetup(char *singleClickBuffer[], char *doubleClickBuffer[])
@@ -75,6 +113,10 @@ void buttonSetup(char *singleClickBuffer[], char *doubleClickBuffer[])
     buttons[i].setDoubleClickHandler(onClick);
     buttons[i].setLongClickTime(500);
   }
+
+  // Set Triggers for White/Yellow button combo
+  buttons[WHITE].setLongClickDetectedHandler(onClick);
+  buttons[YELLOW].setLongClickDetectedHandler(onClick);
 
   singleBuffer = singleClickBuffer;
   doubleBuffer = doubleClickBuffer;

@@ -2,4 +2,4 @@
 
 void wifiSetup();
 void wifiLoop();
-void onPortalButton(); // Calls portal immediately
+void wifiStop();
