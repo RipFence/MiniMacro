@@ -38,7 +38,6 @@
 // Keyboard Options
 #define INTER_CHARACTER_DELAY 50 // Wait in ms between characters
 #define KEYDOWN_DELAY 10         // Wait in ms before key is released
-#define MAX_MACRO_LENGTH 1023    // Maximum length of a macro
 #define RID_KEYBOARD 0           // Keyboard report ID
 
 #endif // CONFIG_H

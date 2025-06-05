@@ -4,6 +4,8 @@
 #include "buttonHelper.h"
 #include "web/index.h"
 #include "config.h"
+#include <AsyncTCP.h>
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
@@ -19,7 +21,7 @@ void onRoot(AsyncWebServerRequest *request)
 {
   // ls(LittleFS.open("/"), 0);
   // request->send(LittleFS, "/index.html", "text/html");
-  request->send_P(200, "text/html", index_html);
+  request->send(200, "text/html", index_html);
 }
 
 void onSaveMacros(AsyncWebServerRequest *request)
@@ -39,12 +41,12 @@ void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
   // Process each button's macros
   for (int i = 0; i < BUTTONCOUNT; i++)
   {
-    if (jsonObj.containsKey(buttonNames[i]))
+    if (jsonObj[buttonNames[i]].is<JsonObject>())
     {
-      JsonObject buttonObj = jsonObj[buttonNames[i]];
+      JsonObject buttonObj = jsonObj[buttonNames[i]].as<JsonObject>();
 
       // Handle single click macro
-      if (buttonObj.containsKey("single"))
+      if (buttonObj["single"].is<const char*>())
       {
         const char *singleMacro = buttonObj["single"].as<const char *>();
         if (singleMacro)
@@ -55,7 +57,7 @@ void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
       }
 
       // Handle double click macro
-      if (buttonObj.containsKey("double"))
+      if (buttonObj["double"].is<const char*>())
       {
         const char *doubleMacro = buttonObj["double"].as<const char *>();
         if (doubleMacro)
