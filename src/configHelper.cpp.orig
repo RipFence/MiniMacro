@@ -4,13 +4,16 @@
 #include "buttonHelper.h"
 #include "web/index.h"
 #include "config.h"
+#include <AsyncTCP.h>
 #include <WiFi.h>
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <ArduinoJson.h>
+#include <AsyncJson.h>
 #include <nvs_flash.h>
+#include <ESPmDNS.h>
 
-WebServer server(80);
+AsyncWebServer server(80);
 bool needsReboot = false;
 
 // check if this string is an IP address
@@ -34,44 +37,39 @@ String toStringIp(IPAddress ip) {
 }
 
 // Checks if the request is to me. If not, redirect it to me
-boolean isNotForMe() {
-  if (!isIp(server.hostHeader())) {
-    Serial.print(F("Request redirected to "));
-    Serial.println(toStringIp(WiFi.localIP()));
-    server.send(302, "text/plain", String("http://") + toStringIp(WiFi.localIP()));
+boolean isNotForMe(AsyncWebServerRequest *request) {
+  if (!isIp(request->host())) { // server.hostHeader()
+    Serial.println(F("Request redirected to captive portal"));
+    request->redirect(String("http://") + toStringIp(WiFi.localIP()), 302);
     return true;
   }
   return false;
 }
 
 // Callback for /
-void onRoot()
+void onRoot(AsyncWebServerRequest *request)
 {
-  if (isNotForMe()) { 
+  if (isNotForMe(request)) { 
     return;
   }
   // ls(LittleFS.open("/"), 0);
   // request->send(LittleFS, "/index.html", "text/html");
-  server.send(200, "text/html", index_html);
+  request->send(200, "text/html", index_html);
 }
 
-void onSaveMacros(String jsonString)
+void onSaveMacros(AsyncWebServerRequest *request)
 {
-  JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, jsonString);
-  if (error)
+  // browser has submitted form so collect the field values and process/store
+}
+void onSaveMacrosBody(AsyncWebServerRequest *request, JsonVariant &json)
+{
+  if (!json.is<JsonObject>())
   {
-    server.send(400, "text/plain", "Invalid JSON format");
+    request->send(400, "text/plain", "Invalid JSON format");
     return;
   }
 
-  if (!doc.is<JsonObject>())
-  {
-    server.send(400, "text/plain", "Invalid JSON format");
-    return;
-  }
-
-  JsonObject jsonObj = doc.as<JsonObject>();
+  JsonObject jsonObj = json.as<JsonObject>();
 
   // Process each button's macros
   for (int i = 0; i < BUTTONCOUNT; i++)
@@ -108,11 +106,11 @@ void onSaveMacros(String jsonString)
   // Save the updated macros to storage
   saveMacros(singleMacroBuffer, SINGLE_MACRO_FILE);
   saveMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
-  server.send(200, "text/plain", "Macros saved successfully. Restarting MiniMacro...");
+  request->send(200, "text/plain", "Macros saved successfully.  Restarting MiniMacro...");
   needsReboot = true;
 }
 
-void onGetMacros()
+void onGetMacros(AsyncWebServerRequest *request)
 {
   // web server --> browser client --> web server request to "/json"
   String jsonStr;
@@ -123,57 +121,57 @@ void onGetMacros()
     doc[buttonNames[i]]["double"] = doubleMacroBuffer[i];
   }
   serializeJson(doc, jsonStr); // equiv to JSON.stringify() in JS
-  server.send(200, "application/json", jsonStr);
+  request->send(200, "text/html", jsonStr);
 }
 
-void onFactoryReset()
+void onFactoryReset(AsyncWebServerRequest *request)
 {
   nvs_flash_erase(); // erase the NVS partition and...
   nvs_flash_init();  // initialize the NVS partition.
   LittleFS.format(); // Format Flash
-  server.send(200, "text/html", "<html><body><h1>Reset to factory defaults. Resetting MiniMacro...</h1></body></html>");
+  request->send(200, "text/plain", "Reset to Factory Defaults.  Restarting MiniMacro...");
   needsReboot = true;
 }
-void onNotFound()
+void onNotFound(AsyncWebServerRequest *request)
 {
   // Handle Unknown Request
-  server.send(404, "text/html", "<html><body><h1>404 Not Found</h1></body></html>");
+  request->send(404, "text/html", "<html><body><h1>404 Not Found</h1></body></html>");
 }
-void onBody()
+void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 {
 }
-void onUpload()
+void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
 }
 
 void configSetup()
 {
-  // respond to GET requests on URL /heap
-  server.on("/heap", HTTP_GET, []()
-            { server.send(200, "text/plain", String(ESP.getFreeHeap())); });
+  if (!MDNS.begin("minimacro"))
+  {
+    while (1)
+    {
+      delay(1000);
+    }
+  }
 
-  server.on("/factory-reset", HTTP_GET, []()
-            { onFactoryReset(); });
+  // respond to GET requests on URL /heap
+  server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/plain", String(ESP.getFreeHeap())); });
+
+  server.on("/factory-reset", HTTP_GET, [](AsyncWebServerRequest *request)
+            { onFactoryReset(request); });
 
   // attach filesystem root at URL /fs
   server.serveStatic("/fs", LittleFS, "/");
 
-  server.on("/", HTTP_GET, []()
-            { onRoot(); });
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { onRoot(request); });
 
-  server.on("/get-macros", HTTP_GET, []()
-            { onGetMacros(); });
+  server.on("/get-macros", HTTP_GET, [](AsyncWebServerRequest *request)
+            { onGetMacros(request); });
 
-  server.on("/save-macros", HTTP_POST, []() {
-    String json = server.arg("plain"); // Get the JSON data from the request body
-    onSaveMacros(json);
-  });
-
-  server.on("/restart", HTTP_GET, []()
-            { 
-              server.send(200, "text/plain", "Restarting MiniMacro...");
-              needsReboot = true; // Set flag to restart
-            });
+  AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/save-macros", onSaveMacrosBody);
+  server.addHandler(handler);
 
   // catch all unhandled requests
   server.onNotFound(onNotFound);
@@ -185,7 +183,6 @@ void configSetup()
 
 void configLoop()
 {
-  server.handleClient(); // Handle incoming client requests
   if (needsReboot)
   {
     needsReboot = false;
@@ -193,13 +190,13 @@ void configLoop()
     // Restart the ESP to apply the changes
     ESP.restart();
   }
-
 }
 
 void configStop()
 {
-  server.stop();
+  server.end();
   delay(100);
+  MDNS.end();
   LittleFS.end();
   nvs_flash_deinit();
   Serial.println(F("Webserver Stopped"));

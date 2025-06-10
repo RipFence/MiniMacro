@@ -9,6 +9,7 @@
 
 void setup()
 {
+  Serial.begin(115200);
   displaySetup();
   keyboardSetup(); // Initialize HID Keyboard
 
@@ -17,9 +18,10 @@ void setup()
   loadMacros(doubleMacroBuffer, DOUBLE_MACRO_FILE);
 
   buttonSetup(singleMacroBuffer, doubleMacroBuffer);
-  wifiSetup();
-  configSetup();
+  // wifiSetup();
+  // configSetup();
   displayReady();
+  Serial.println(F("Main Setup Done"));
 }
 
 void loop()

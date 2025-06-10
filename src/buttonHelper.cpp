@@ -10,7 +10,60 @@
 char **singleBuffer;
 char **doubleBuffer;
 
+const char *buttonNames[] = {"RED", "GREEN", "BLUE", "YELLOW", "BLACK", "WHITE"};
+
+const int buttonPins[] = { // GPIO pins, same order as above
+  RED_BUTTON_PIN,
+  GREEN_BUTTON_PIN,
+  BLUE_BUTTON_PIN,
+  YELLOW_BUTTON_PIN,
+  BLACK_BUTTON_PIN,
+  WHITE_BUTTON_PIN
+};
+
+bool configMode = false;
 Button2 buttons[BUTTONCOUNT];
+
+void startConfigMode()
+{
+  wifiSetup();
+  configSetup();
+  disableScreenTimeout();
+  // Wait for Buttons to be released
+  while (buttons[YELLOW].isPressed())
+  {
+    buttons[YELLOW].loop();
+  }
+  while (buttons[WHITE].isPressed())
+  {
+    buttons[WHITE].loop();
+  }
+  buttons[YELLOW].resetPressedState();
+  buttons[WHITE].resetPressedState();
+  configMode = true;
+}
+
+void stopConfigMode()
+{
+  // Wait for Buttons to be released
+  while (buttons[YELLOW].isPressed())
+  {
+    buttons[YELLOW].loop();
+  }
+  while (buttons[WHITE].isPressed())
+  {
+    buttons[WHITE].loop();
+  }
+  buttons[YELLOW].resetPressedState();
+  buttons[WHITE].resetPressedState();
+  configMode = false;
+  // configStop();
+  // wifiStop();
+  enableScreenTimeout();
+  // Restart the ESP because of bug:
+  // softAP won't start after configStop() and wifiStop()
+  ESP.restart();
+}
 
 void onClick(Button2 &btn)
 {
@@ -46,55 +99,25 @@ void onClick(Button2 &btn)
   case triple_click:
     return;
   case long_click:
-    if (btnNum == WHITE || btnNum == YELLOW) {
-      // Handle White/Yellow button combo
-      if (btnNum == WHITE && buttons[YELLOW].isPressed())
+    // Handle White/Yellow button combo
+    if ((btnNum == WHITE && buttons[YELLOW].isPressed())
+        || (btnNum == YELLOW && buttons[WHITE].isPressed()))
+    {
+      if (configMode)
       {
-        buttons[YELLOW].resetPressedState();
-        if (configMode)
-        {
-          stopConfigMode();
-        }
-        else
-        {
-          startConfigMode();
-        }
+        displayReady();
+        stopConfigMode();
       }
-      else if (btnNum == YELLOW && buttons[WHITE].isPressed())
+      else
       {
-        buttons[WHITE].resetPressedState();
-        if (configMode)
-        {
-          stopConfigMode();
-        }
-        else
-        {
-          startConfigMode();
-        }
+        displayPrint("Config...", 2, 0, 0);
+        startConfigMode();
       }
     }
     break;
   case empty:
     return;
   }
-}
-
-void startConfigMode()
-{
-  wifiSetup();
-  configSetup();
-  disableScreenTimeout();
-  displayPrint("Config Mode", 2, 0, 0);
-  configMode = true;
-}
-
-void stopConfigMode()
-{
-  configMode = false;
-  configStop();
-  wifiStop();
-  enableScreenTimeout();
-  displayReady();
 }
 
 void buttonSetup(char *singleClickBuffer[], char *doubleClickBuffer[])
@@ -120,6 +143,7 @@ void buttonSetup(char *singleClickBuffer[], char *doubleClickBuffer[])
 
   singleBuffer = singleClickBuffer;
   doubleBuffer = doubleClickBuffer;
+  Serial.println(F("Button Setup Done"));
 }
 
 void buttonLoop()

@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <DNSServer.h>
+#include <esp_wifi.h>
 
 const char *softAP_ssid = WIFI_SSID;
 
@@ -20,13 +21,25 @@ DNSServer dnsServer;
 
 void wifiSetup()
 {
-  WiFi.softAPConfig(apIP, apIP, netMsk);
-  // its an open WLAN access point without a password parameter
-  WiFi.softAP(softAP_ssid);
+  // Ensure WiFi is completely deinitialized before setting up again
+  WiFi.mode(WIFI_OFF); // Deinitialize the WiFi driver
+  delay(100); // Small delay after deinit
 
-  /* Setup the DNS server redirecting all the domains to the apIP */
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(DNS_PORT, "*", apIP);
+  // Turn On WiFi
+  WiFi.mode(WIFI_AP);
+  delay(50);
+  // Set the WiFi access point IP address and net mask
+  WiFi.softAPConfig(apIP, apIP, netMsk);
+  if(WiFi.softAP(softAP_ssid)) {
+    Serial.println(F("AP Configured"));
+    /* Setup the DNS server redirecting all the domains to the apIP */
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer.start(DNS_PORT, "*", apIP);
+    Serial.println(F("Wifi Started"));
+  } else {
+    Serial.println(F("Failed to configure AP"));
+  }
+  // its an open WLAN access point without a password parameter
 
 }
 
@@ -42,7 +55,9 @@ void wifiStop()
   
   // Stop the WiFi access point
   WiFi.softAPdisconnect(true);
-  
+  delay(200); // Wait for the AP to disconnect
   // Disable WiFi
   WiFi.mode(WIFI_OFF);
+  delay(100);
+  Serial.println(F("Wifi Stopped"));
 }

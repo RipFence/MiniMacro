@@ -202,6 +202,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
       <div class="button-container">
         <button type="button" id="save-macros" onclick="onClickSave()">Save Macros</button>
+        <button type="button" id="cancel-button" onclick="onCancel()">Cancel</button>
         <button type="button" id="factory-reset" onclick="onClickFactoryReset()">Erase Everything</button>
       </div>
     </form>
@@ -258,6 +259,21 @@ const char index_html[] PROGMEM = R"rawliteral(
         .catch(error => {
           console.error('Error:', error);
           alert('Error saving macros');
+        });
+    }
+    function onCancel() {
+      fetch('/restart')
+        .then(response => {
+          if (response.ok) {
+            alert('Changes discarded. Device is restarting...');
+            // The server will restart the ESP after reset
+          } else {
+            alert('Error discarding changes');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error discarding changes');
         });
     }
     function onClickFactoryReset() {

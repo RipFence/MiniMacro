@@ -243,6 +243,7 @@ void keyboardSetup()
     delay(10);
     TinyUSBDevice.attach();
   }
+  Serial.println(F("Keyboard Setup Done"));
 }
 
 // processHID() should be called in the main loop

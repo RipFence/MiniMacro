@@ -20,4 +20,4 @@ void displayOn();
 void setScreenTimeout(unsigned long timeout);
 void disableScreenTimeout();
 void enableScreenTimeout();
-void resetScreenTimeout(unsigned long timeout = 0);
+void resetScreenTimeout(unsigned long ms = 0);

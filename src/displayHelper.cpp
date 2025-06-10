@@ -107,7 +107,7 @@ void displayReady()
   display.print("Ready");
   display.setTextSize(1);
   display.setCursor(0, 24);
-  display.print("Setup:minimacro.local");
+  display.print("Config: White+Yellow");
   display.display();
   ClearDisplayTime = millis() + 30000;
   resetScreenTimeout(30000);
@@ -137,7 +137,7 @@ void enableScreenTimeout()
 {
     _screenOffTimeout = millis() + SCREEN_OFF_TIMEOUT;
 }
-void resetScreenTimeout(unsigned long ms = 0)
+void resetScreenTimeout(unsigned long ms)
 {
     setScreenTimeout(millis() + ms + SCREEN_OFF_TIMEOUT);
 }
