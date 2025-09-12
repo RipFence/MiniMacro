@@ -5,7 +5,7 @@
 #define OLED_RESET -1       // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 
-extern unsigned long screenOffTimeout;
+// extern unsigned long screenOffTimeout;
 
 void displaySetup();
 void displayLoop();
@@ -17,3 +17,7 @@ void displayReady();
 bool displayIsOn();
 void displayOff();
 void displayOn();
+void setScreenTimeout(unsigned long timeout);
+void disableScreenTimeout();
+void enableScreenTimeout();
+void resetScreenTimeout(unsigned long ms = 0);

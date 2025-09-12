@@ -10,8 +10,10 @@ enum Button
   WHITE,
   BUTTONCOUNT
 };
-extern const int buttonPins[];
+
 extern const char *buttonNames[];
+
+extern bool configMode;
 
 void buttonSetup(char *singleClickBuffer[], char *doubleClickBuffer[]);
 void buttonLoop();

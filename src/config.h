@@ -2,12 +2,14 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define AppVersion "1.1.0"
+
 // WiFi Access Point Options
 #define WIFI_SSID "MiniMacro"
-#define WIFI_PASSWORD ""
-#define WIFI_CONNECT_TIMEOUT 15 // in seconds
-#define WIFI_CONFIG_FILENAME "/wifi.dat"
-#define TRIGGER_PIN 0
+// #define WIFI_PASSWORD ""
+// #define WIFI_CONNECT_TIMEOUT 15 // in seconds
+// #define WIFI_CONFIG_FILENAME "/wifi.dat"
+// #define TRIGGER_PIN 0
 
 // Macro Options
 #define MACRO_LENGTH 2048
@@ -38,7 +40,6 @@
 // Keyboard Options
 #define INTER_CHARACTER_DELAY 50 // Wait in ms between characters
 #define KEYDOWN_DELAY 10         // Wait in ms before key is released
-#define MAX_MACRO_LENGTH 1023    // Maximum length of a macro
 #define RID_KEYBOARD 0           // Keyboard report ID
 
 #endif // CONFIG_H
